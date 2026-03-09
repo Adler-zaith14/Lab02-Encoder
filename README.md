@@ -1,4 +1,4 @@
-# LAB P1-02: Construindo o Transformer Encoder "From Scratch"
+# LAB P1-02: Construindo o Transformer Encoder 
 **Disciplina:** Tópicos em Inteligência Artificial – 2026.1
 **Professor:** Prof. Dimmy Magalhães
 **Instituição:** iCEV - Instituto de Ensino Superior
