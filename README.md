@@ -1,15 +1,16 @@
-# LAB P1-02: Encoder do Transformer
-**Disciplina:** Tópicos em Inteligência Artificial  
-**Instituição:** ICEV  
-**Autor:** Adler Castro Alves  
+# LAB P1-02: Construindo o Transformer Encoder "From Scratch"
+**Disciplina:** Tópicos em Inteligência Artificial – 2026.1
+**Professor:** Prof. Dimmy Magalhães
+**Instituição:** iCEV - Instituto de Ensino Superior
+**Autor:** Adler Castro Alves
 
 ---
 
 ## Objetivo
-Implementação from scratch do Encoder do Transformer conforme o paper "Attention Is All You Need" (Vaswani et al., 2017), utilizando apenas NumPy e Pandas. O laboratório cobre a pipeline completa de embeddings, self-attention e feed forward network empilhados em 6 camadas com residual connections e layer normalization.
+Implementação from scratch do Forward Pass de um bloco Encoder completo, baseado no paper "Attention Is All You Need" (Vaswani et al., 2017), utilizando apenas NumPy e Pandas. A entrada é uma frase simples e a saída é a representação densa Z após passar por N=6 camadas do Encoder.
 
 ```
-Attention(Q, K, V) = softmax(QK^T / √d_k) V
+Output = LayerNorm(x + Sublayer(x))
 ```
 
 ---
@@ -31,51 +32,33 @@ python encoder.py
 
 ---
 
-## Normalização por √d_k
-O produto escalar QK^T cresce proporcionalmente à dimensão d_k. Sem o fator de escala, os valores ficam grandes demais e o softmax satura — os gradientes ficam próximos de zero e o aprendizado trava. Dividir por √d_k mantém a variância dos scores estável independentemente da dimensão escolhida.
+## O que foi implementado
 
-```python
-scores = (Q @ K.transpose(0, 2, 1)) / np.sqrt(dk)
+**Passo 1 — Preparação dos dados**
+
+Criei um DataFrame no pandas mapeando palavras para IDs, converti a frase de entrada em lista de IDs e inicializei a tabela de embeddings com `np.random.randn(vocab_size, d_model)`. O tensor X final ficou com shape `(1, 5, 64)` — batch, tokens, d_model.
+
+**Passo 2 — Motor matemático**
+
+- `self_attention`: projeta X em Q, K, V via matrizes de pesos aleatórias, calcula o produto escalar `QK^T`, divide por `√d_k` e aplica softmax escrita na mão com `np.exp`
+- `layer_norm`: calcula média e variância no último eixo e normaliza com epsilon `1e-6` pra não dividir por zero
+- `ffn`: expansão linear com W1 + ReLU (`np.maximum`) + contração com W2, voltando pra dimensão d_model
+
+**Passo 3 — Empilhando as camadas**
+
+Loop de 6 camadas seguindo o fluxo exato do paper:
 ```
+X_att   = self_attention(X)
+X_norm1 = layer_norm(X + X_att)
+X_ffn   = ffn(X_norm1)
+X_out   = layer_norm(X_norm1 + X_ffn)
+X       = X_out
+```
+
+**Validação de sanidade:** o tensor entra na camada 1 com `(1, 5, 64)` e sai da camada 6 com o mesmo shape — só os valores mudam.
 
 ---
 
-## Exemplo de Input e Output
-
-```python
-frase = "o banco bloqueou o cartao"
-tokens = [vocab[p] for p in frase.split()]
-
-emb_table = np.random.randn(len(vocab), d_model)
-X = emb_table[tokens][np.newaxis, :]
-
-for i in range(n_camadas):
-    X = layer_norm(X + self_attention(X, d_model))
-    X = layer_norm(X + ffn(X))
-```
-
-**Input:**
-```
-X: (1, 5, 64)  — batch, tokens, d_model
-```
-
-**Output:**
-```
-Z: (1, 5, 64)  — mesma forma, vetores enriquecidos com contexto
-```
-
----
-
-## Arquitetura
-
-O Encoder empilha 6 blocos idênticos. Cada bloco aplica:
-
-1. **Self-Attention** — cada token atende a todos os outros da frase simultaneamente
-2. **Add & Norm** — conexão residual + layer normalization
-3. **Feed Forward** — duas camadas lineares com ReLU, processa cada token individualmente
-4. **Add & Norm** — nova conexão residual + layer normalization
-
-Ao final das 6 camadas, cada vetor de token carrega contexto de toda a sequência.
 
 **Anexo Google Colab:**
 
