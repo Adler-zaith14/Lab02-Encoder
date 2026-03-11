@@ -1,0 +1,3 @@
+Z = X
+print(f"Shape final (Vetor Z): {Z.shape}")
+print(f"Primeiros 8 valores do token 0:\n{Z[0, 0, :8]}")
