@@ -1,22 +1,13 @@
 import numpy as np
 import pandas as pd
 
-
 palavras = ["o", "banco", "bloqueou", "cartao"]
-ids = [0, 1, 2, 3]
+ids      = [0,   1,       2,          3      ]
 df_vocab = pd.DataFrame({"palavra": palavras, "id": ids})
-vocab = dict(zip(df_vocab.palavra, df_vocab.id))
+vocab    = dict(zip(df_vocab.palavra, df_vocab.id))
 
-frase = "o banco bloqueou o cartao"
+frase  = "o banco bloqueou o cartao"
 tokens = [vocab[p] for p in frase.split()]
 
-d_model = 64
-n_camadas = 6
-
-np.random.seed(42)
-emb_table = np.random.randn(len(vocab), d_model)
-
-
-X = emb_table[tokens]
-X = X[np.newaxis, :]  
-print(X.shape)
+print(df_vocab)
+print(f"\nTokens: {tokens}")
