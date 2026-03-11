@@ -1,4 +1,4 @@
-# LAB P1-02: Construindo o Transformer Encoder 
+# LAB P1-02: Construindo o Transformer Encoder
 **Disciplina:** Tópicos em Inteligência Artificial – 2026.1
 **Professor:** Prof. Dimmy Magalhães
 **Instituição:** iCEV - Instituto de Ensino Superior
@@ -7,7 +7,8 @@
 ---
 
 ## Objetivo
-Implementação from scratch do Forward Pass de um bloco Encoder completo, baseado no paper "Attention Is All You Need" (Vaswani et al., 2017), utilizando apenas NumPy e Pandas. A entrada é uma frase simples e a saída é a representação densa Z após passar por N=6 camadas do Encoder.
+
+Implementação from scratch do Forward Pass de um Encoder completo baseado no paper *"Attention Is All You Need"* (Vaswani et al., 2017), utilizando apenas NumPy e Pandas. A entrada é a frase `"o banco bloqueou o cartao"` e a saída é o tensor de representações densas **Z** após passar por **N=6 camadas** empilhadas do Encoder.
 
 ```
 Output = LayerNorm(x + Sublayer(x))
@@ -16,15 +17,19 @@ Output = LayerNorm(x + Sublayer(x))
 ---
 
 ## Como Executar
+
+> Recomendado rodar no **Google Colab** — basta executar as células em ordem.
+
 ```bash
-pip install -r requirements.txt
-python encoder.py
+pip install numpy pandas
 ```
 
 ---
 
-## Estrutura
+## Estrutura do Projeto
+
 ```
+├── encoder.ipynb       # Notebook Google Colab
 ├── encoder.py          # Implementação principal
 ├── requirements.txt    # Dependências
 └── README.md
@@ -32,32 +37,91 @@ python encoder.py
 
 ---
 
-## O que foi implementado
+## Implementação
 
-**Passo 1 — Preparação dos dados**
+###  Passo 1 — Preparação dos Dados
 
-Criei um DataFrame no pandas mapeando palavras para IDs, converti a frase de entrada em lista de IDs e inicializei a tabela de embeddings com `np.random.randn(vocab_size, d_model)`. O tensor X final ficou com shape `(1, 5, 64)` — batch, tokens, d_model.
+Vocabulário de 4 palavras construído com Pandas mapeando `palavra → ID`. A frase de entrada é tokenizada, convertida em índices e embarcada em uma tabela inicializada com `np.random.randn(vocab_size, d_model)`.
 
-**Passo 2 — Motor matemático**
+| Hiperparâmetro | Valor |
+|---|---|
+| `d_model` | 64 |
+| `d_ff` | 256 (`d_model × 4`) |
+| `n_camadas` | 6 |
+| Shape de entrada X | `(1, 5, 64)` |
 
-- `self_attention`: projeta X em Q, K, V via matrizes de pesos aleatórias, calcula o produto escalar `QK^T`, divide por `√d_k` e aplica softmax escrita na mão com `np.exp`
-- `layer_norm`: calcula média e variância no último eixo e normaliza com epsilon `1e-6` pra não dividir por zero
-- `ffn`: expansão linear com W1 + ReLU (`np.maximum`) + contração com W2, voltando pra dimensão d_model
+---
 
-**Passo 3 — Empilhando as camadas**
+###  Passo 2 — Funções Matemáticas
 
-Loop de 6 camadas seguindo o fluxo exato do paper:
+**Scaled Dot-Product Attention**
+
+Implementa a atenção single-head da seção 3.1 do paper:
+
 ```
-X_att   = self_attention(X)
+Attention(Q, K, V) = softmax(QKᵀ / √dk) · V
+```
+
+Onde `Q`, `K`, `V` são projeções lineares de `X` via matrizes de pesos `Wq`, `Wk`, `Wv`.
+
+---
+
+**Layer Normalization**
+
+Normalização aplicada no eixo de features com epsilon para estabilidade numérica:
+
+```
+LayerNorm(x) = (x − μ) / √(σ² + ε)
+```
+
+---
+
+**Feed-Forward Network**
+
+Expansão linear seguida de ReLU e contração de volta à dimensão `d_model`:
+
+```
+FFN(x) = max(0, xW1 + b1) W2 + b2
+```
+
+---
+
+###  Passo 3 — Inicialização dos Pesos
+
+Os pesos `Wq`, `Wk`, `Wv`, `W1`, `W2` são inicializados uma única vez por camada e armazenados em uma lista de dicionários antes do forward pass:
+
+```python
+camadas = []
+for _ in range(n_camadas):
+    camadas.append({
+        "Wq": np.random.randn(d_model, d_model),
+        "Wk": np.random.randn(d_model, d_model),
+        "Wv": np.random.randn(d_model, d_model),
+        "W1": np.random.randn(d_model, d_ff),
+        "b1": np.zeros(d_ff),
+        "W2": np.random.randn(d_ff, d_model),
+        "b2": np.zeros(d_model),
+    })
+```
+
+---
+
+###  Passo 4 — Forward Pass (6 Camadas)
+
+Loop de 6 camadas seguindo o fluxo do paper:
+
+```python
+X_att   = scaled_dot_product_attention(X, Wq, Wk, Wv)
 X_norm1 = layer_norm(X + X_att)
-X_ffn   = ffn(X_norm1)
+X_ffn   = ffn(X_norm1, W1, b1, W2, b2)
 X_out   = layer_norm(X_norm1 + X_ffn)
 X       = X_out
 ```
 
-**Validação de sanidade:** o tensor entra na camada 1 com `(1, 5, 64)` e sai da camada 6 com o mesmo shape — só os valores mudam.
+O tensor entra na camada 1 com shape `(1, 5, 64)` e sai da camada 6 com o mesmo shape — apenas os valores são transformados a cada camada.
 
 ---
+
 
 
 **Anexo Google Colab:**
