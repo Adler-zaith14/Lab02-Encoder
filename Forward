@@ -1,0 +1,7 @@
+for i, params in enumerate(camadas):
+    X_att   = scaled_dot_product_attention(X, params["Wq"], params["Wk"], params["Wv"])
+    X_norm1 = layer_norm(X + X_att)
+    X_ffn   = ffn(X_norm1, params["W1"], params["b1"], params["W2"], params["b2"])
+    X_out   = layer_norm(X_norm1 + X_ffn)
+    X = X_out
+    print(f"Camada {i+1} — shape: {X.shape}")
