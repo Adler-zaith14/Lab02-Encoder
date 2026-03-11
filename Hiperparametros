@@ -1,0 +1,5 @@
+d_model   = 64
+n_camadas = 6
+d_ff      = d_model * 4
+
+np.random.seed(42)
