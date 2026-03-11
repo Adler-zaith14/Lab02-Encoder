@@ -1,0 +1,4 @@
+emb_table = np.random.randn(len(vocab), d_model)
+X = emb_table[tokens][np.newaxis, :]
+
+print(f"Shape entrada: {X.shape}")

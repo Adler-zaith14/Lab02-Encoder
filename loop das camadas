@@ -1,8 +1,0 @@
-for i in range(n_camadas):
-    X = layer_norm(X + self_attention(X, d_model))
-    X = layer_norm(X + ffn(X))
-    print(f"camada {i+1} ok")
-
-Z = X
-print(Z.shape)
-print(Z[0, 0, :8])
