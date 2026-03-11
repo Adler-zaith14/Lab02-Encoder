@@ -1,0 +1,16 @@
+def scaled_dot_product_attention(x, Wq, Wk, Wv):
+    dk = x.shape[-1]
+
+    Q = x @ Wq
+    K = x @ Wk
+    V = x @ Wv
+
+    scores = Q @ np.transpose(K, (0, 2, 1))
+    scores = scores / np.sqrt(dk)
+
+    attn = softmax(scores)
+    return attn @ V
+
+def ffn(x, W1, b1, W2, b2):
+    h = np.maximum(0, x @ W1 + b1)
+    return h @ W2 + b2
