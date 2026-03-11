@@ -1,9 +1,8 @@
 def softmax(x):
-   
     e = np.exp(x - x.max(axis=-1, keepdims=True))
     return e / e.sum(axis=-1, keepdims=True)
 
 def layer_norm(x, eps=1e-6):
     mean = x.mean(axis=-1, keepdims=True)
-    std = np.sqrt(x.var(axis=-1, keepdims=True) + eps)
-    return (x - mean) / std
+    var  = x.var(axis=-1,  keepdims=True)
+    return (x - mean) / np.sqrt(var + eps)
