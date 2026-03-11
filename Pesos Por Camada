@@ -1,0 +1,13 @@
+camadas = []
+for _ in range(n_camadas):
+    camadas.append({
+        "Wq": np.random.randn(d_model, d_model),
+        "Wk": np.random.randn(d_model, d_model),
+        "Wv": np.random.randn(d_model, d_model),
+        "W1": np.random.randn(d_model, d_ff),
+        "b1": np.zeros(d_ff),
+        "W2": np.random.randn(d_ff, d_model),
+        "b2": np.zeros(d_model),
+    })
+
+print(f"Camadas inicializadas: {len(camadas)}")
